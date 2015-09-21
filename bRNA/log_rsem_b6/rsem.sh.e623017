@@ -1,8 +1,0 @@
-[samopen] SAM header is present: 93343 sequences.
-Warning: Exhausted best-first chunk memory for read HISEQ2000:199:C1B4MACXX:5:1101:19425:119314 1:N:0:TTAGGC/1 (patid 201323); skipping read
-Warning: Exhausted best-first chunk memory for read HISEQ2000:199:C1B4MACXX:5:2208:16327:191239 1:N:0:TTAGGC/1 (patid 16037346); skipping read
-# reads processed: 19293307
-# reads with at least one reported alignment: 14002882 (72.58%)
-# reads that failed to align: 5290425 (27.42%)
-Reported 45247014 paired-end alignments to 1 output stream(s)
-[bam_sort_core] merging from 52 files...
