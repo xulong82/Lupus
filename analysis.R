@@ -14,7 +14,7 @@ setwd("~/Dropbox/GitHub/Lupus")
 yaa <- list()
 
 # BXSB_YAA: RNA-seq
-eset <- read.delim("bRNA/BXSB/counts.txt", stringsAsFactors = F)
+eset <- read.delim("Greg/counts.txt", stringsAsFactors = F)
 eset <- data.frame(row.names = eset$Gene, eset[grep("BXSB", colnames(eset))])
 eset <- eset[apply(eset, 1, function(x) max(x) > 10 & sum(x > 0) > 2), ] 
 

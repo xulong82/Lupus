@@ -5,12 +5,12 @@ module load bowtie
 module load samtools
 module load java
 
-# cd /data/xwang/Lupus/WES/TRIM
-# 
-# sams=`find ./ -name '*.sam'`
-# bams=`find ./ -name '*.sorted.bam'`
-# mm10="/data/xwang/REF/Mm10Genome"
-# 
+cd /data/xwang/Lupus/WES/bam
+
+sams=`find ./ -name '*.sam'`
+bams=`find ./ -name '*.sorted.bam'`
+mm10="/data/xwang/REF/Mm10Genome"
+
 # for idx in $sams; do
 #   idx2=`basename $idx`
 #   file=${idx2/.sam/}
@@ -21,31 +21,29 @@ module load java
 #   samtools index ${file}.sorted.bam 
 # done
 
-# cd /data/xwang/Lupus/WES/VAR
+cd /data/xwang/Lupus/WES/var
 
-# for idx in $bams; do
-#   idx2=`basename $idx`
-#   file=${idx2/.sorted.bam/}
-#   echo $file
-#   echo "coverage calling"
-#   samtools mpileup -q 1 -f ${mm10}.fa ../TRIM/${file}.sorted.bam > ${file}.mpileup
-#   awk '{if($4 >= 6) print $0}' ${file}.mpileup > ${file}_filtered.mpileup
-# done
+for idx in $bams; do
+  idx2=`basename $idx`
+  file=${idx2/.sorted.bam/}
+  echo $file
+  echo "coverage calling"
+  samtools mpileup -q 1 -f ${mm10}.fa ../bam/${file}.sorted.bam > ${file}.mpileup
+  awk '{if($4 >= 6) print $0}' ${file}.mpileup > ${file}_filtered.mpileup
+done
 
-cd /data/xwang/Lupus/WES/VAR
-
-case="BXSB_GES13_04091_CGATGT_filtered.mpileup"
-control="nm3848_GES13_05080_ATCACG_filtered.mpileup"
+# case="BXSB_GES13_04091_CGATGT_filtered.mpileup"
+# control="nm3848_GES13_05080_ATCACG_filtered.mpileup"
 
 # SNP
-  java -Xmx128G -jar $HOME/VarScan.v2.3.9.jar pileup2snp $case --p-value 0.01 > BXSB_SNP.vsf
+# java -Xmx128G -jar $HOME/VarScan.v2.3.9.jar pileup2snp $case --p-value 0.01 > BXSB_SNP.vsf
 # java -Xmx128G -jar $HOME/VarScan.v2.3.9.jar mpileup2snp $case --output-vcf 1 --p-value 0.01 > BXSB_SNP.vcf
-  java -Xmx128G -jar $HOME/VarScan.v2.3.9.jar pileup2snp $control --p-value 0.01 > nm3848_SNP.vsf
+# java -Xmx128G -jar $HOME/VarScan.v2.3.9.jar pileup2snp $control --p-value 0.01 > nm3848_SNP.vsf
 # INDEL
-  java -Xmx128G -jar $HOME/VarScan.v2.3.9.jar pileup2indel $case --p-value 0.01 > BXSB_IND.vsf
-  java -Xmx128G -jar $HOME/VarScan.v2.3.9.jar pileup2indel $control --p-value 0.01 > nm3848_IND.vsf
+# java -Xmx128G -jar $HOME/VarScan.v2.3.9.jar pileup2indel $case --p-value 0.01 > BXSB_IND.vsf
+# java -Xmx128G -jar $HOME/VarScan.v2.3.9.jar pileup2indel $control --p-value 0.01 > nm3848_IND.vsf
 
-  java -jar $HOME/VarScan.v2.3.9.jar filter BXSB_SNP.vcf --min-reads2 50 > BXSB_SNP_filtered.vcf
+# java -jar $HOME/VarScan.v2.3.9.jar filter BXSB_SNP.vcf --min-reads2 50 > BXSB_SNP_filtered.vcf
 
 # Copy number alteration
 # awk '{(tot+=$4)}; END{print "total base:" tot}' $case

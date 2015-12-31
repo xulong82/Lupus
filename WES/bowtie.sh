@@ -15,7 +15,7 @@ module load samtools
 # cd /data/xwang/REF
 # bowtie-build Mm10Genome.fa Mm10Genome
 
-cd /data/xwang/Lupus/WES/TRIM
+cd /data/xwang/Lupus/WES/fastq
 ref="/data/xwang/REF/Mm10Genome"
 file=${arg}
   
@@ -28,5 +28,5 @@ bowtie -p 20 \
        "$ref" \
        -1 "$file"_R1.fastq \
        -2 "$file"_R2.fastq \
-       "$file".sam
+       ../bam/"$file".sam
  
