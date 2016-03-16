@@ -4,52 +4,93 @@ library(genefilter)
 library(preprocessCore)
 library(ggplot2)
 library(biomaRt)
-library(qvalue)
 library(quantro)
+library(qvalue)
 library(matrixStats)
 library(Hmisc)
+library(ape)
+library(amap)
 
 rm(list = ls())
-source("~/Dropbox/X/function.R")
+source("~/Dropbox/GitHub/X/function.R")
 setwd("~/Dropbox/GitHub/Lupus/BXSB(rnaseq)")
 
-load("gene_expression_tpm.rdt"); tpm = gene_expression_tpm
-load("gene_expression_tpm_b6.rdt"); tpm_b6 = gene_expression_tpm
+load("./gene_expression_tpm.rdt")
+tpm = gene_expression_tpm # aligned to BXSB
+rm(gene_expression_tpm)
 
-select = intersect(rownames(tpm), rownames(tpm_b6))
-
-# predicted genes show up: KB's pipeline
-x = log2(tpm[select, 4] + 1)
-y = log2(tpm_b6[select, 4] + 1)
-plot( (x+y)/2, x-y)
-
-data <- gene_expression_tpm[rowMax(gene_expression_tpm) > 10, ] %>% as.data.frame
-(group <- factor(names(data), levels = c("BXSB", "BXSB_B6")))
+tpm = tpm[rowMax(tpm) > 8, ]
 
 mart <- useMart("ensembl", dataset = "mmusculus_gene_ensembl")
-attribute <- c("ensembl_gene_id", "external_gene_name", "description")
+mart1 = getBM(c("ensembl_gene_id", "external_gene_name"), "ensembl_gene_id", rownames(tpm), mart)
 
-pdf("bRNA/Igkc.pdf", width = 8, height = 6)
-par(mar = c(10, 4, 4, 2))
-matboxplot(data, groupFactor = group)
-dev.off()
+tpm = tpm[mart1$ensembl_gene_id, ]
+rownames(tpm) = mart1$external_gene_name
 
-outlier <- data[rowMax(as.matrix(data)) > 1e4, ] # ENSMUSG00000076609/Igkc is twice in BXSB
-mart1 <- getBM(attribute, "ensembl_gene_id", rownames(outlier), mart)
-mart1$description <- gsub("_\\[.*", "", mart1$description)
+data <- tpm[rowMax(tpm) > 10, ] %>% as.data.frame
+(group <- factor(names(data), levels = c("BXSB", "BXSB_B6")))
+
+outlier <- data[rowMax(as.matrix(data)) > 1e4, ]
+
+apply(log2(outlier + 1), 1, function(x) summary(lm(x ~ group))$coefficients["groupBXSB_B6", "Pr(>|t|)"])
+
+# Igkc and Ighg2c are two immunity genes that showed dramatic change between the two strains
 
 data <- data[! rowMax(as.matrix(data)) > 1e4, ]
-data <- sweep(data, 2, colSums(data), "/") * 1e6 
+data <- sweep(data, 2, colSums(data), "/") * 1e6
 
 pdf("bRNA/data.pdf", width = 8, height = 6)
 par(mar = c(10, 4, 4, 2))
 matboxplot(log2(data + 1), groupFactor = group)
 dev.off()
 
+# Clustering
+
+hc1 <- hcluster(t(data), method = "pearson", link = "average")
+plot(as.phylo(hc1), type = "fan")
+
+# Pair-wise ttest
+
+ttest <- rowttests(as.matrix(log2(data + 1)), group) # BXSB/B6 -> BXSB
+
+data$BXSB_B6_avg <- rowMeans(data[group == "BXSB_B6"])
+data$BXSB_avg <- rowMeans(data[group == "BXSB"])
+
+data <- cbind(data, ttest)
+data$q.value <- qvalue(data$p.value)$qvalues
+
+data$sel <- "N"
+data$sel[abs(data$dm) > 0.3 & data$q.value < 0.05] <- "S"
+# !!! transcriptome of BXSB_B6 and BXSB so different!
+
+pdf("bRNA/vocano.pdf", width = 6, height = 4)
+
+ggplot(data, aes(x = dm, y = -log10(p.value))) +
+  geom_point(aes(color = as.factor(sel)), size = 1) +
+  scale_color_manual(values = c("grey30", "firebrick1")) +
+  theme_bw() + xlab("Effect") + ylab("-log10(pvalue)") +
+  theme(legend.position = "none")
+
+dev.off()
+
+genes = rownames(data)[data$sel == "S"]
+
+myGk <- mmGK(genes)
+
+myGk$KEGG[1:10, ]
+sapply(myGk$GO, function(x) x$Term[1:20])
+data.frame(KEGG = myGk$KEGG$Term[1:20], BP = myGk$GO$BP$Term[1:20], MF = myGk$GO$BP$Term[1:20])
+
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# Median norm.
+
 objectMedians <- colMedians(as.matrix(data))
 normalize.median <- sweep(data, 2, objectMedians, FUN = "-")
 colMedians(as.matrix(normalize.median))
-colSums(normalize.median)
+
+# Quantile norm.
+
 normalize.quantile <- normalize.quantiles(as.matrix(data), copy = TRUE)
 dimnames(normalize.quantile) <- dimnames(data)
 
@@ -58,33 +99,6 @@ qqplot(data[, 1], data[, 7], xlab = "BXSB_B6", ylab = "BXSB")
 abline(0, 1)
 qqplot(normalize.median[, 1], normalize.median[, 7], xlab = "BXSB_B6", ylab = "BXSB")
 abline(0, 1)
+qqplot(normalize.quantile[, 1], normalize.quantile[, 7], xlab = "BXSB_B6", ylab = "BXSB")
+abline(0, 1)
 
-ttest <- rowttests(as.matrix(log2(data + 1)), group) # ttests
-
-data$BXSB_avg <- rowMeans(data[group == "BXSB"])
-data$BXSB_B6_avg <- rowMeans(data[group == "BXSB_B6"])
-data$log2fold <- with(data, log2(BXSB_B6_avg + 1) - log2(BXSB_avg + 1))
-data <- cbind(data, ttest)
-data$q.value <- qvalue(data$p.value)$qvalues
-data_select <- data[abs(data$log2fold) > 0.3 & data$q.value < 0.05, ]
-ttest$select = "N"
-ttest$select[rownames(ttest) %in% rownames(data_select)] = "S"
-# !!! transcriptome of BXSB_B6 and BXSB so different!
-
-pdf("bRNA/vocano.pdf", width = 6, height = 4)
-ggplot(ttest, aes(x = dm, y = -log10(p.value))) + 
-  geom_point(aes(color = as.factor(select)), size = 1) +
-  scale_color_manual(values = c("grey30", "firebrick1")) +
-  theme_bw() + xlab("Effect") + ylab("-log10(pvalue)") +
-  theme(legend.position = "none")
-dev.off()
-
-mart2 <- getBM(attribute, "ensembl_gene_id", rownames(data_select), mart)
-symbol <- mart2$external_gene_name %>% unique
-gk <- myGK(symbol)
-gk$KEGG[1:10, ]
-sapply(gk$GO, function(x) x$Term[1:20])
-data.frame(KEGG = gk$KEGG$Term[1:20], BP = gk$GO$BP$Term[1:20], MF = gk$GO$BP$Term[1:20])
-
-RNA = list(data = data, symbol = symbol, gk = gk)
-bxsbList = list(RNA = RNA)

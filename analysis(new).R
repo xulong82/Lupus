@@ -1,6 +1,8 @@
+
 # Signature genes
+
 yaa_bxsb <- bxsbList$RNA$symbol
-yaa_b6 <- rownames(eset_select) 
+yaa_b6 <- rownames(eset_select)
 intersect(yaa_bxsb, yaa_b6)
 setdiff(yaa_bxsb, yaa_b6)
 geneList <- list(B6 = setdiff(yaa_b6, yaa_bxsb), BXSB = setdiff(yaa_bxsb, yaa_b6), YAA = intersect(yaa_bxsb, yaa_b6))
@@ -29,11 +31,13 @@ df$text = NULL
 df$text[df$enr < 0.01] = which(df$enr < 0.01)
 
 pdf("bRNA/immgen.pdf", width = 8, height = 5)
-ggplot(df, aes(x = module1, y = -log10(enr), label = text)) +  
+
+ggplot(df, aes(x = module1, y = -log10(enr), label = text)) +
   geom_point(aes(color = module2, size = int)) + geom_text(vjust = 2) +
   geom_hline(yintercept = 1.3, color = "red", linetype = "dashed") +
   theme_bw() + xlab("") + ylab("") + ylim(c(-1, 12)) +
   theme(legend.position = "none")
+
 dev.off()
 
 m24 = module[[24]]
@@ -45,7 +49,8 @@ data.frame(KEGG = gk$KEGG$Term[1:10], BP = gk$GO$BP$Term[1:10], MF = gk$GO$BP$Te
 # Master regulators with iRegulon
 # !!!overlap with the WES variant genes!!!
 
-# ---
+# @@@@@@@@@@@@@@@@@@@@@@@@
+
 load("bRNA/gene_expression_cnt.rdt") # DESeq2
 load("bRNA/gene_expression_cnt_b6.rdt") # DESeq2
 data <- gene_expression_cnt[rowMax(gene_expression_cnt) > 30, ] %>% as.data.frame
