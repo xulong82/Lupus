@@ -1,0 +1,16 @@
+
+
+--------------------------------------------------------------------------------
+|  JAX TORQUE EPILOGUE
+|
+|  Job ID: 955085.cadillac-master.jax.org
+|  Exit Status: 0
+|  Requested Resources:
+|      mem=64gb,nodes=1:ppn=10,walltime=10:00:00
+|  Resources Consumed:
+|      cput=03:30:56,mem=2158956kb,vmem=3534740kb,walltime=00:21:27
+|  Walltime accuracy: 3.6%
+|
+| Epilogue Host (TORQUE Mother Superior): cadillac040
+|
+--------------------------------------------------------------------------------

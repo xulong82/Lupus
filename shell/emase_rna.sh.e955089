@@ -1,0 +1,10 @@
+discarding /opt/compsci/Anaconda/2.4.0/bin from PATH
+prepending /opt/compsci/Anaconda/2.4.0/envs/emase/bin to PATH
+# reads processed: 19293307
+# reads with at least one reported alignment: 13825522 (71.66%)
+# reads that failed to align: 5467785 (28.34%)
+Reported 59463522 alignments to 1 output stream(s)
+# reads processed: 19293307
+# reads with at least one reported alignment: 13974640 (72.43%)
+# reads that failed to align: 5318667 (27.57%)
+Reported 60866832 alignments to 1 output stream(s)

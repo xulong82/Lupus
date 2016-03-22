@@ -1,5 +1,5 @@
 #!/bin/bash
-#PBS -l mem=64gb,nodes=1:ppn=10,walltime=10:00:00
+#PBS -l mem=64gb,nodes=1:ppn=1,walltime=10:00:00
 
 ######################
 
@@ -29,8 +29,8 @@ BASEN=${FASTQ/_R1.fastq/}
 cd /data/xwang/Lupus/bxsb_rna/emase
 
 # alignment in parallel (ppn=10)
-bowtie -p 10 -q -a --best --strata --sam -v 3 ${REF_H} ${DIREC}/${BASEN}_R1.fastq ${BASEN}_R1.sam
-bowtie -p 10 -q -a --best --strata --sam -v 3 ${REF_H} ${DIREC}/${BASEN}_R2.fastq ${BASEN}_R2.sam
+# bowtie -p 10 -q -a --best --strata --sam -v 3 ${REF_H} ${DIREC}/${BASEN}_R1.fastq ${BASEN}_R1.sam
+# bowtie -p 10 -q -a --best --strata --sam -v 3 ${REF_H} ${DIREC}/${BASEN}_R2.fastq ${BASEN}_R2.sam
 
 # sam to bam format
 # samtools view -bS ${BASEN}_R1.sam > ${BASEN}_R1.bam
@@ -44,5 +44,5 @@ bowtie -p 10 -q -a --best --strata --sam -v 3 ${REF_H} ${DIREC}/${BASEN}_R2.fast
 # combine-emase-files -i ${BASEN}_R1.h5,${BASEN}_R2.h5 -o ${BASEN}.h5
   
 # emase estimation of expression level
-# run-emase -i ${BASEN}.h5 -L ${INFO2} -M 4 -o emase -c
+  run-emase -i ${BASEN}.h5 -L ${INFO2} -M 4 -o ${BASEN}.emase -c
 
