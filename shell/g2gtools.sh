@@ -20,3 +20,6 @@ g2gtools patch -i ${REF} -s ${STRAIN} -v ${VCF_SNPS} -o ${STRAIN}.patched.fa
 g2gtools extract --genes -i ${STRAIN}.patched.fa -db ${DB} > ${STRAIN}.patched.genes.fa
 g2gtools extract --genes -i ${REF} -db ${DB} > B6.genes.fa
 
+g2gtools extract --transcripts -i ${STRAIN}.patched.fa -db ${DB} > ${STRAIN}.patched.transcripts.fa
+g2gtools extract --transcripts -i ${REF} -db ${DB} > B6.transcripts.fa
+

@@ -28,13 +28,17 @@ data = cbind(rna.emase.B6, rna.emase.SB)
 data = data[rowMax(as.matrix(data)) > 10, ]
 
 mart = useMart("ensembl", dataset = "mmusculus_gene_ensembl")
-biomart <- getBM(c("ensembl_gene_id", "external_gene_name"), "ensembl_gene_id", rownames(data), mart)
+# biomart <- getBM(c("ensembl_gene_id", "external_gene_name"), "ensembl_gene_id", rownames(data), mart)
 
-data = data[biomart$ensembl_gene_id, ]
-rownames(data) = biomart$external_gene_name
+retrive <- c("ensembl_transcript_id", "ensembl_gene_id", "external_gene_name")
+biomart <- getBM(retrive, filters = "ensembl_transcript_id", values = rownames(data), mart)
+
+data <- data[biomart$ensembl_transcript_id, ]
+data_gene <- apply(data, 2, function(x) tapply(x, biomart$external_gene_name, sum))
 
 yaa = factor(rep(c(rep("yaa0", 3), rep("yaa1", 4)), 2), levels = c("yaa0", "yaa1"))
 str = factor(c(rep("B6", 7), rep("SB", 7)), levels = c("B6", "SB"))
+all = paste0(str, yaa)
 
 myplot = function(data, geneId) {
   x = data.frame(value = as.matrix(data)[geneId, ], yaa = yaa, str = str)
@@ -45,13 +49,27 @@ myplot = function(data, geneId) {
 
 pdf("./pdf/example.pdf", width = 3, height = 4)
 
-myplot(data, "Tlr7") # B6 genes with Yaa effects
-myplot(data, "Tlr2") # SB genes with Yaa effects
-myplot(data, "Tlr9") # SB genes without Yaa effects
+myplot(data_gene, "Tlr7") # B6 genes with Yaa effects
+myplot(data_gene, "Tlr2") # SB genes with Yaa effects
+myplot(data_gene, "Tlr9") # SB genes without Yaa effects
+
+dev.off()
+
+# extreme genes
+
+(outlier <- data_gene[rowMax(data_gene) > 5e3, ])
+
+sapply(unique(all), function(x) rowMeans(outlier[, all == x]) )
+
+pdf("./pdf/outlier.pdf", width = 3, height = 4)
+
+lapply(rownames(outlier), function(x) myplot(data_gene, x))
 
 dev.off()
 
 # define the SB genes
+
+data = as.data.frame(data_gene)
 
 b6 = rowMeans(data[str == "B6"])
 sb = rowMeans(data[str == "SB"])
@@ -91,7 +109,7 @@ data3 = data[1:7] + data[8:14]
 ttest = rowttests(as.matrix(log2(data3 + 1)), yaa[1:7])
 ttest$q.value = p.adjust(ttest$p.value, method = "fdr")
 
-# dm is log2 fold change, 0.1 equals a 7% change
+# dm is log2 fold change, 0.1 equals 7% change
 
 gene.yaa = rownames(ttest)[ttest$q.value < 0.05 & (abs(ttest$dm) > 0.1)]
 
@@ -102,6 +120,11 @@ venn.diagram(vennList, imagetype = "png", file = "./pdf/venn.png", cat.pos = 0, 
 
 myGk = mmGK(intersect(gene.sb, gene.yaa))
 data.frame(KEGG = myGk$KEGG$Term[1:20], BP = myGk$GO$BP$Term[1:20], MF = myGk$GO$BP$Term[1:20])
+
+# output
+
+yy = sapply(unique(all), function(x) rowMeans(data_gene[, all == x]) )
+write.xlsx(yy, file = "./output.xlsx", sheetName = "TPM_mean", append = T)
 
 write(intersect(gene.sb, gene.yaa), file = "./iregulon/gene1.txt")
 
